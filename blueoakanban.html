@@ -1,0 +1,44 @@
+<head>
+  <title>blueoakanban</title>
+</head>
+
+<body>
+  <header>
+    <div class="login">
+      {{> loginButtons}}
+    </div>
+    <h1>Asana Kanban</h1>
+  </header>
+  <div>
+    {{> dashboard}}
+  </div>
+</body>
+
+<template name="dashboard">
+  <ul>
+    {{#each issues}}
+      {{> issue}}
+    {{/each}}
+  </ul>
+</template>
+
+<template name="oauth">
+  <p>Oauth goes here</p>
+</template>
+
+<template name="issue">
+  <li class="text">
+    <div class="title">{{name}}</div>
+    <div class="workspace">{{workspace.name}}</div>
+    <div class="assignee">{{assignee.name}}</div>
+  </li>
+</template>
+
+<template name="filters">
+  <select class="workspace-filter">
+    <option value="">All</option>
+    {{#each workspaces}}
+      <option value="{{id}}">{{name}}</option>
+    {{/each}}
+  </select>
+</template>
