@@ -1,4 +1,3 @@
-Issues = new Mongo.Collection("issues");
 AsanaUsers = new Mongo.Collection("asana_users");
 AsanaWorkspaces = new Mongo.Collection("asana_workspaces");
 AsanaTasks = new Mongo.Collection("asana_tasks");
@@ -10,7 +9,7 @@ if (Meteor.isClient) {
   Meteor.subscribe('asana_workspaces');
 
   Template.dashboard.helpers({
-    issues: function() {
+    tasks: function() {
       var workspace = parseInt(Session.get('Workspace'));
       if (workspace) {
         return AsanaTasks.find({completed: false, 'workspace.id': workspace});
@@ -24,10 +23,6 @@ if (Meteor.isClient) {
   Template.dashboard.events({
 
   });
-
-  Template.issue.helpers({
-
-  })
 
   Template.filters.helpers({
     workspaces: function() {

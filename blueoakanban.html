@@ -10,14 +10,15 @@
     <h1>Asana Kanban</h1>
   </header>
   <div>
+    {{> filters}}
     {{> dashboard}}
   </div>
 </body>
 
 <template name="dashboard">
   <ul>
-    {{#each issues}}
-      {{> issue}}
+    {{#each tasks}}
+      {{> task}}
     {{/each}}
   </ul>
 </template>
@@ -26,7 +27,7 @@
   <p>Oauth goes here</p>
 </template>
 
-<template name="issue">
+<template name="task">
   <li class="text">
     <div class="title">{{name}}</div>
     <div class="workspace">{{workspace.name}}</div>
