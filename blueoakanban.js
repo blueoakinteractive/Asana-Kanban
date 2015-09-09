@@ -8,24 +8,32 @@ if (Meteor.isClient) {
 
   Meteor.subscribe('asana_tasks');
   Meteor.subscribe('asana_workspaces');
+  Meteor.subscribe('asana_users');
 
   Template.dashboard.helpers({
     tasks: function() {
       var result = [];
       var workspace = parseInt(Session.get('Workspace'));
+      var user = parseInt(Session.get('User'));
 
       var filter = {sort: {}}
       if (Session.get('TaskSort')) {
         filter.sort[Session.get('TaskSort')] = Session.get('TaskSort');
       }
 
+      var query = {
+        completed: false
+      }
+
       if (workspace) {
-        result = AsanaTasks.find({completed: false, 'workspace.id': workspace}, filter);
+        _.extend(query, {'workspace.id': workspace});
       }
-      else {
-        result = AsanaTasks.find({completed: false}, filter);
+
+      if (user) {
+         _.extend(query, {'assignee.id': user});
       }
-      return result;
+
+      return AsanaTasks.find(query, filter);
     },
   });
 
@@ -36,6 +44,9 @@ if (Meteor.isClient) {
   Template.filters.helpers({
     workspaces: function() {
       return AsanaWorkspaces.find({});
+    },
+    users: function() {
+      return AsanaUsers.find({});
     }
   });
 
@@ -47,6 +58,10 @@ if (Meteor.isClient) {
     'change .sort-filter' : function(event) {
       event.preventDefault();
       Session.set('TaskSort', event.target.value);
+    },
+    'change .assignee-filter' : function(event) {
+      event.preventDefault();
+      Session.set('User', event.target.value);
     }
   });
 
@@ -92,7 +107,7 @@ if (Meteor.isServer) {
 
   Meteor.publish('asana_tasks', function () {
     if (this.userId) {
-      return AsanaTasks.find({'assignee.id' : 4216372728453});
+      return AsanaTasks.find({});
     }
     return [];
   });
@@ -103,6 +118,13 @@ if (Meteor.isServer) {
       return AsanaWorkspaces.find({}, filter);
     }
     return [];
+  });
+
+  Meteor.publish('asana_users', function() {
+    if (this.userId) {
+      var filter = {sort: {name: 1}};
+      return AsanaUsers.find({}, filter);
+    }
   });
 
   Meteor.methods({
@@ -157,7 +179,14 @@ if (Meteor.isServer) {
       });
       return;
     },
-    asanaTasksByUser: function asanaTasksByUser() {
+    asanaTasksByUser: function asanaTasksByUser(user_id) {
+      var asanaClient = Meteor.asanaClient();
+      var asana_user = AsanaUsers.findOne({id: user_id});
+      if (asana_user) {
+        Meteor.call('asanaTasks', asana_user);
+      }
+    },
+    asanaTasksAllUsers: function asanaTasksAllUser() {
       var asanaClient = Meteor.asanaClient();
       var asana_users = AsanaUsers.find({});
       _.each(asana_users.fetch(), function(asana_user) {

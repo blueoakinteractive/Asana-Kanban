@@ -48,4 +48,10 @@
     <option value="modified_at">Newly updated</option>
     <option value="created_at">Newly created</option>
   </select>
+  <select class="assignee-filter">
+    <option value="">All</option>
+    {{#each users}}
+      <option value="{{id}}">{{name}}</option>
+    {{/each}}
+  </select>
 </template>
