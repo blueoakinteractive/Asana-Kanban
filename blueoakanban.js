@@ -187,7 +187,6 @@ if (Meteor.isServer) {
       console.log("Fetching tasks for " + asana_user.name + " since " + modified_since);
 
       _.each(asana_user.workspaces, function(workspace) {
-        console.log(workspace);
         var tasks = Async.runSync(function(done) {
           asanaClient.tasks.findAll({
             workspace: workspace,
