@@ -99,7 +99,8 @@ if (Meteor.isServer) {
 
   Meteor.publish('asana_workspaces', function() {
     if (this.userId) {
-      return AsanaWorkspaces.find({});
+      var filter = {sort: {name: 1}}
+      return AsanaWorkspaces.find({}, filter);
     }
     return [];
   });
