@@ -91,13 +91,13 @@ if (Meteor.isServer) {
     asanaUsers: function asanaUsers() {
       var asanaClient = Meteor.asanaClient();
       var users = Async.runSync(function(done) {
-        asanaClient.users.list(function(err, users) {
-            done(null, users);
+        asanaClient.users.findAll(true).then(function(users) {
+          done(null, users.data);
         });
-      })
+      });
 
       _.each(users.result, function(user) {
-        console.log(user.name);
+        console.log('Adding user ' + user.name);
         if (user.id) {
           AsanaUsers.upsert({
             id: user.id
@@ -141,18 +141,18 @@ if (Meteor.isServer) {
       }
 
       if (!modified_since) {
-        modified_since = new Date('2015-09-05').toISOString();
+        modified_since = new Date('2015-09-08').toISOString();
       }
 
       var workspaces = AsanaWorkspaces.find({});
       _.each(workspaces.fetch(), function(workspace) {
         var tasks = Async.runSync(function(done) {
-          asanaClient.workspaces.tasks({
+          asanaClient.tasks.findAll({
             workspace: workspace.id,
             assignee: asana_user,
             modified_since: modified_since
-          }, function(err, tasks) {
-            done(null, tasks);
+          }).then(function(tasks) {
+            done(null, tasks.data);
           });
         });
 
@@ -186,7 +186,7 @@ if (Meteor.isServer) {
     asanaTaskDetail: function asanaTaskDetail(task_id) {
       var asanaClient = Meteor.asanaClient();
       var taskDetail = Async.runSync(function(done) {
-        asanaClient.tasks.get(task_id, function(err, taskDetail) {
+        asanaClient.tasks.findById(task_id).then(function(taskDetail) {
           done(null, taskDetail);
         });
       });
@@ -210,18 +210,20 @@ if (Meteor.isServer) {
         date = null;
       }
       Meteor.call('asanaTasks', 'me', date);
+      return;
     },
     userLogin: function() {
-      var user = Meteor.user();
-      Meteor.users.update({
-        _id: Meteor.userId()
-      },{
-        $set: {
-          login_time: new Date(),
-          last_login: user.login_time,
-        }
-      });
-      Meteor.call('asanaUpdate');
+      // var user = Meteor.user();
+      // Meteor.users.update({
+      //   _id: Meteor.userId()
+      // },{
+      //   $set: {
+      //     login_time: new Date(),
+      //     last_login: user.login_time,
+      //   }
+      // });
+      // Meteor.call('asanaUpdate');
+      return;
     }
   });
 }
