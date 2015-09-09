@@ -213,16 +213,16 @@ if (Meteor.isServer) {
       return;
     },
     userLogin: function() {
-      // var user = Meteor.user();
-      // Meteor.users.update({
-      //   _id: Meteor.userId()
-      // },{
-      //   $set: {
-      //     login_time: new Date(),
-      //     last_login: user.login_time,
-      //   }
-      // });
-      // Meteor.call('asanaUpdate');
+      var user = Meteor.user();
+      Meteor.users.update({
+        _id: Meteor.userId()
+      },{
+        $set: {
+          login_time: new Date(),
+          last_login: user.login_time,
+        }
+      });
+      Meteor.call('asanaUpdate');
       return;
     }
   });
