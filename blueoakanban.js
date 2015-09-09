@@ -54,15 +54,16 @@ if (Meteor.isServer) {
     var user = Meteor.user();
     var asanaService = ServiceConfiguration.configurations.findOne({service:'asana'});
     if (user && asanaService) {
-      var client = Asana.createClient({
-        oauth: {
-          clientId: asanaService.clientId,
-          clientSecret: asanaService.clientSecret,
-          accessToken: user.services.asana.accessToken,
-          refreshTokan: user.services.asana.refreshToken,
-          redirectUrl: Meteor.absoluteUrl("_oauth/asana")
-        }
+      var client = Asana.Client.create({
+        clientId: asanaService.clientId,
+        clientSecret: asanaService.secret,
+        redirectUri: Meteor.absoluteUrl("_oauth/asana")
       });
+
+      client.useOauth({
+        credentials: user.services.asana.accessToken
+      });
+
       return client;
     }
     return null;
@@ -108,14 +109,13 @@ if (Meteor.isServer) {
           });
         }
       });
-      // console.log(users.result);
-      // return users.result;
+      return;
     },
     asanaWorkspaces: function asanaWorkspaces() {
       var asanaClient = Meteor.asanaClient();
       var workspaces = Async.runSync(function(done) {
-        asanaClient.workspaces.list(function(err, workspaces) {
-          done(null, workspaces);
+        asanaClient.workspaces.findAll().then(function(workspaces) {
+          done(null, workspaces.data);
         });
       });
 
@@ -131,6 +131,7 @@ if (Meteor.isServer) {
           });
         }
       });
+      return;
     },
     asanaTasks: function asanaTasks(asana_user, modified_since) {
       var asanaClient = Meteor.asanaClient();
@@ -180,6 +181,7 @@ if (Meteor.isServer) {
           asana_sync: new Date()
         }
       });
+      return;
     },
     asanaTaskDetail: function asanaTaskDetail(task_id) {
       var asanaClient = Meteor.asanaClient();
@@ -197,6 +199,7 @@ if (Meteor.isServer) {
           taskDetail.result
         );
       }
+      return;
     },
     asanaUpdate: function() {
       var user = Meteor.user();
