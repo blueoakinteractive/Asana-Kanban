@@ -1,7 +1,7 @@
 AsanaUsers = new Mongo.Collection("asana_users");
 AsanaWorkspaces = new Mongo.Collection("asana_workspaces");
 AsanaTasks = new Mongo.Collection("asana_tasks");
-
+AsanaTags = new Mongo.Collection("asana_tags");
 
 if (Meteor.isClient) {
 
@@ -199,6 +199,30 @@ if (Meteor.isServer) {
           taskDetail.result
         );
       }
+      return;
+    },
+    asanaTags: function asanaTags() {
+      var asanaClient = Meteor.asanaClient();
+      var workspaces = AsanaWorkspaces.find({});
+      _.each(workspaces.fetch(), function(workspace) {
+        var tags = Async.runSync(function(done) {
+          asanaClient.tags.findAll({
+            workspace: workspace.id,
+          }).then(function(tags) {
+            done(null, tags.data);
+          });
+        });
+        console.log(tags.result);
+        _.each(tags.result, function(tag) {
+          if (tag.id) {
+            AsanaTags.upsert({
+              id: tag.id
+            },
+              tag
+            );
+          }
+        });
+      });
       return;
     },
     asanaUpdate: function() {
