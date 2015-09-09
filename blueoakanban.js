@@ -2,6 +2,7 @@ AsanaUsers = new Mongo.Collection("asana_users");
 AsanaWorkspaces = new Mongo.Collection("asana_workspaces");
 AsanaTasks = new Mongo.Collection("asana_tasks");
 AsanaTags = new Mongo.Collection("asana_tags");
+AsanaProjects = new Mongo.Collection("asana_projects");
 
 if (Meteor.isClient) {
 
@@ -10,13 +11,21 @@ if (Meteor.isClient) {
 
   Template.dashboard.helpers({
     tasks: function() {
+      var result = [];
       var workspace = parseInt(Session.get('Workspace'));
+
+      var filter = {sort: {}}
+      if (Session.get('TaskSort')) {
+        filter.sort[Session.get('TaskSort')] = Session.get('TaskSort');
+      }
+
       if (workspace) {
-        return AsanaTasks.find({completed: false, 'workspace.id': workspace});
+        result = AsanaTasks.find({completed: false, 'workspace.id': workspace}, filter);
       }
       else {
-        return AsanaTasks.find({completed: false});
+        result = AsanaTasks.find({completed: false}, filter);
       }
+      return result;
     },
   });
 
@@ -34,6 +43,10 @@ if (Meteor.isClient) {
     'change .workspace-filter' : function(event) {
       event.preventDefault();
       Session.set('Workspace', event.target.value);
+    },
+    'change .sort-filter' : function(event) {
+      event.preventDefault();
+      Session.set('TaskSort', event.target.value);
     }
   });
 
@@ -60,8 +73,12 @@ if (Meteor.isServer) {
         redirectUri: Meteor.absoluteUrl("_oauth/asana")
       });
 
+
       client.useOauth({
-        credentials: user.services.asana.accessToken
+        credentials: {
+          // access_token: user.services.asana.accessToken,
+          refresh_token: user.services.asana.refreshToken
+        }
       });
 
       return client;
@@ -88,29 +105,6 @@ if (Meteor.isServer) {
   });
 
   Meteor.methods({
-    asanaUsers: function asanaUsers() {
-      var asanaClient = Meteor.asanaClient();
-      var users = Async.runSync(function(done) {
-        asanaClient.users.findAll(true).then(function(users) {
-          done(null, users.data);
-        });
-      });
-
-      _.each(users.result, function(user) {
-        console.log('Adding user ' + user.name);
-        if (user.id) {
-          AsanaUsers.upsert({
-            id: user.id
-          }, {
-            $set: {
-              id: user.id,
-              name: user.name
-            }
-          });
-        }
-      });
-      return;
-    },
     asanaWorkspaces: function asanaWorkspaces() {
       var asanaClient = Meteor.asanaClient();
       var workspaces = Async.runSync(function(done) {
@@ -133,25 +127,65 @@ if (Meteor.isServer) {
       });
       return;
     },
+    asanaUsers: function asanaUsers() {
+      var workspaces = AsanaWorkspaces.find({});
+      _.each(workspaces.fetch(), function(workspace) {
+
+        var asanaClient = Meteor.asanaClient();
+        var users = Async.runSync(function(done) {
+          asanaClient.users.findByWorkspace(workspace.id).then(function(users) {
+            done(null, users.data);
+          });
+        });
+
+        _.each(users.result, function(user) {
+          if (user.id) {
+            AsanaUsers.upsert({
+              id: user.id
+            }, {
+              $set: {
+                id: user.id,
+                name: user.name
+              },
+              $addToSet: {
+                workspaces: workspace.id
+              }
+            });
+          }
+        });
+      });
+      return;
+    },
+    asanaTasksByUser: function asanaTasksByUser() {
+      var asanaClient = Meteor.asanaClient();
+      var asana_users = AsanaUsers.find({});
+      _.each(asana_users.fetch(), function(asana_user) {
+        var date = new Date('2014-01-01').toISOString();
+        Meteor.call('asanaTasks', asana_user, date);
+      });
+    },
     asanaTasks: function asanaTasks(asana_user, modified_since) {
       var asanaClient = Meteor.asanaClient();
-
-      if (!asana_user) {
-        asana_user = 'me';
-      }
 
       if (!modified_since) {
         modified_since = new Date('2015-09-08').toISOString();
       }
 
-      var workspaces = AsanaWorkspaces.find({});
-      _.each(workspaces.fetch(), function(workspace) {
+      if (!asana_user.workspaces) {
+        console.log('Asana user does not belong to any workspaces!');
+        return;
+      }
+
+      console.log("Fetching tasks for " + asana_user.name + " since " + modified_since);
+
+      _.each(asana_user.workspaces, function(workspace) {
+        console.log(workspace);
         var tasks = Async.runSync(function(done) {
           asanaClient.tasks.findAll({
-            workspace: workspace.id,
-            assignee: asana_user,
+            workspace: workspace,
+            assignee: asana_user.id,
             modified_since: modified_since
-          }).then(function(tasks) {
+          }, true).then(function(tasks) {
             done(null, tasks.data);
           });
         });
@@ -162,8 +196,7 @@ if (Meteor.isServer) {
               id: task.id,
             },{
               id: task.id,
-              workspace: workspace.id,
-              workspace_id: workspace._id,
+              workspace: workspace,
               name: task.name,
               title: task.name
             });
@@ -174,13 +207,13 @@ if (Meteor.isServer) {
       })
 
       console.log('Done importing');
-      Meteor.users.update({
-        _id: Meteor.userId()
-      },{
-        $set: {
-          asana_sync: new Date()
-        }
-      });
+      // Meteor.users.update({
+      //   _id: Meteor.userId()
+      // },{
+      //   $set: {
+      //     asana_sync: new Date()
+      //   }
+      // });
       return;
     },
     asanaTaskDetail: function asanaTaskDetail(task_id) {
@@ -212,41 +245,66 @@ if (Meteor.isServer) {
             done(null, tags.data);
           });
         });
-        console.log(tags.result);
+
         _.each(tags.result, function(tag) {
           if (tag.id) {
             AsanaTags.upsert({
               id: tag.id
-            },
-              tag
-            );
+            },{
+              id: tag.id,
+              name: tag.name,
+              workspace: workspace.id
+            });
+          }
+        });
+      });
+      return;
+    },
+    asanaProjects: function asanaProjects() {
+      var asanaClient = Meteor.asanaClient();
+      var workspaces = AsanaWorkspaces.find({});
+      _.each(workspaces.fetch(), function(workspace) {
+        var projects = Async.runSync(function(done) {
+          asanaClient.projects.findByWorkspace(workspace.id).then(function(projects) {
+            done(null, projects.data);
+          });
+        });
+        _.each(projects.result, function(project) {
+          if (project.id) {
+            AsanaProjects.upsert({
+              id: project.id
+            },{
+              id: project.id,
+              name: project.name,
+              workspace: workspace.id
+            });
           }
         });
       });
       return;
     },
     asanaUpdate: function() {
-      var user = Meteor.user();
-      if (user.asana_sync) {
-        var date = user.asana_sync.toISOString();
-      }
-      else {
-        date = null;
-      }
-      Meteor.call('asanaTasks', 'me', date);
+      // var user = Meteor.user();
+      // if (user.asana_sync) {
+      //   var date = user.asana_sync.toISOString();
+      // }
+      // else {
+      //   date = null;
+      // }
+      // Meteor.call('asanaTasks', 'me', date);
       return;
     },
     userLogin: function() {
-      var user = Meteor.user();
-      Meteor.users.update({
-        _id: Meteor.userId()
-      },{
-        $set: {
-          login_time: new Date(),
-          last_login: user.login_time,
-        }
-      });
-      Meteor.call('asanaUpdate');
+      // var user = Meteor.user();
+      // Meteor.users.update({
+      //   _id: Meteor.userId()
+      // },{
+      //   $set: {
+      //     login_time: new Date(),
+      //     last_login: user.login_time,
+      //   }
+      // });
+      // Meteor.call('asanaUpdate');
       return;
     }
   });

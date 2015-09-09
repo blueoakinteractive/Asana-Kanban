@@ -32,6 +32,7 @@
     <div class="title">{{name}}</div>
     <div class="workspace">{{workspace.name}}</div>
     <div class="assignee">{{assignee.name}}</div>
+    <div class="link"><a href="https://app.asana.com/0/{{workspace.id}}/{{id}}" target="_blank">link</a></div>
   </li>
 </template>
 
@@ -41,5 +42,10 @@
     {{#each workspaces}}
       <option value="{{id}}">{{name}}</option>
     {{/each}}
+  </select>
+  <select class="sort-filter">
+    <option value="">Default</option>
+    <option value="modified_at">Newly updated</option>
+    <option value="created_at">Newly created</option>
   </select>
 </template>
