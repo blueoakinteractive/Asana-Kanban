@@ -161,15 +161,22 @@ if (Meteor.isServer) {
       var asanaClient = Meteor.asanaClient();
       var asana_users = AsanaUsers.find({});
       _.each(asana_users.fetch(), function(asana_user) {
-        var date = new Date('2014-01-01').toISOString();
-        Meteor.call('asanaTasks', asana_user, date);
+        Meteor.call('asanaTasks', asana_user);
       });
     },
     asanaTasks: function asanaTasks(asana_user, modified_since) {
       var asanaClient = Meteor.asanaClient();
+      var syncTime = new Date();
 
+      // Use the last sync time from the user object or a default time
+      // if no time filter is set.
       if (!modified_since) {
-        modified_since = new Date('2015-09-08').toISOString();
+        if (asana_user.task_sync_time) {
+          modified_since = asana_user.task_sync_time.toISOString();
+        }
+        else {
+          modified_since = new Date('2015-09-09').toISOString();
+        }
       }
 
       if (!asana_user.workspaces) {
@@ -208,13 +215,15 @@ if (Meteor.isServer) {
       })
 
       console.log('Done importing');
-      // Meteor.users.update({
-      //   _id: Meteor.userId()
-      // },{
-      //   $set: {
-      //     asana_sync: new Date()
-      //   }
-      // });
+
+      // Save the sync time so we can limit api requests next time this is ran.
+      AsanaUsers.update({
+        id: asana_user.id
+      },{
+        $set: {
+          task_sync_time: syncTime
+        }
+      });
       return;
     },
     asanaTaskDetail: function asanaTaskDetail(task_id) {
