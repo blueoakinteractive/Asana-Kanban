@@ -335,16 +335,23 @@ if (Meteor.isServer) {
       return;
     },
     userLogin: function() {
-      // var user = Meteor.user();
-      // Meteor.users.update({
-      //   _id: Meteor.userId()
-      // },{
-      //   $set: {
-      //     login_time: new Date(),
-      //     last_login: user.login_time,
-      //   }
-      // });
-      // Meteor.call('asanaUpdate');
+      var user = Meteor.user();
+
+      // Create a date if the use has never logged in.
+      if (!user.login_time) user.login_time = new Date();
+
+      // Update the login and last login times for the user.
+      Meteor.users.update({
+        _id: Meteor.userId()
+      },{
+        $set: {
+          login_time: new Date(),
+          last_login: user.login_time,
+        }
+      });
+
+      // Fetch new tasks from users since last sync.
+      Meteor.call('asanaTasksAllUsers');
       return;
     }
   });
