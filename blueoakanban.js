@@ -185,6 +185,7 @@ if (Meteor.isServer) {
       if (asana_user) {
         Meteor.call('asanaTasks', asana_user);
       }
+      return;
     },
     asanaTasksAllUsers: function asanaTasksAllUser() {
       var asanaClient = Meteor.asanaClient();
@@ -192,6 +193,7 @@ if (Meteor.isServer) {
       _.each(asana_users.fetch(), function(asana_user) {
         Meteor.call('asanaTasks', asana_user);
       });
+      return;
     },
     asanaTasks: function asanaTasks(asana_user, modified_since) {
       var asanaClient = Meteor.asanaClient();
