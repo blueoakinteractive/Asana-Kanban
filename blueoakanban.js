@@ -482,14 +482,3 @@ Router.route('/', function() {
   // }
   this.render('Dashboard', {});
 });
-
-Router.route('/oauth', function () {
-  // var code = this.params.query.code;
-  // if (code) {
-  //   var asanaClient = Meteor.call('asanaClient');
-  //   asanaClient.app.accessTokenFromCode(code).then(function(credentials){
-  //     Session.set('AsanaToken', credentials.access_token);
-  //   });
-  // }
-  this.render('Oauth', {});
-});
