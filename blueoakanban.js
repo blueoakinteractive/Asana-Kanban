@@ -128,6 +128,16 @@ if (Meteor.isServer) {
   });
 
   Meteor.methods({
+    // Load the logged in user's Asana user data.
+    asanaMe: function asanaMe() {
+      var asanaClient = Meteor.asanaClient();
+      var me = Async.runSync(function(done) {
+        asanaClient.users.me().then(function(me) {
+          done(null, me);
+        });
+      });
+      return me.result;
+    },
     asanaWorkspaces: function asanaWorkspaces() {
       var asanaClient = Meteor.asanaClient();
       var workspaces = Async.runSync(function(done) {
