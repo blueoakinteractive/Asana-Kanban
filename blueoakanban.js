@@ -475,10 +475,5 @@ Meteor.methods({
 });
 
 Router.route('/', function() {
-  // var auth = Meteor.call('asanaOauth');
-  // console.log(auth);
-  // if (auth && auth.redirect) {
-  //   Route.go(auth.redirect);
-  // }
   this.render('Dashboard', {});
 });
