@@ -344,6 +344,78 @@ if (Meteor.isServer) {
       // Meteor.call('asanaTasks', 'me', date);
       return;
     },
+    // Initializes settings in a users profile.
+    userProfileInit: function() {
+      var user = Meteor.user();
+
+      if (user) {
+
+        // Init the profile settings object.
+        if (!user.profile.settings) {
+          Meteor.users.update({
+            _id: Meteor.userId()
+          },{
+            $set: {
+              'profile.settings': {}
+            }
+          });
+          user = Meteor.user();
+        }
+
+        // Store the users Asana ID in the profile settings.
+        if (!user.profile.settings.asanaId) {
+          var me = Meteor.call('asanaMe');
+          if (me.id) {
+            Meteor.users.update({
+              _id: Meteor.userId()
+            }, {
+              $set: {
+                'profile.settings.asanaId': me.id
+              }
+            });
+          }
+        }
+
+        // Init the users selected workspaces.
+        if (!user.profile.settings.workspaces) {
+          Meteor.users.update({
+            _id: Meteor.userId()
+          },{
+            $set: {
+              'profile.settings.workspaces': []
+            }
+          })
+        }
+      }
+    },
+    // Method to update a users active workspaces.
+    userProfileWorkspace: function(workspaceId, action) {
+      var workspace = AsanaWorkspaces.findOne({id: parseInt(workspaceId) });
+
+      if (!workspace) {
+        throw new Meteor.Error(400, 'Workspace does not exist');
+      }
+
+      // Add or remove the selected workspace for the users profile settings.
+      if (action == 'remove') {
+        Meteor.users.update({
+          _id: Meteor.userId()
+        },{
+          $pull: {
+            'profile.settings.workspaces': parseInt(workspaceId)
+          }
+        });
+      }
+      else {
+        Meteor.users.update({
+          _id: Meteor.userId()
+        },{
+          $addToSet: {
+            'profile.settings.workspaces': parseInt(workspaceId)
+          }
+        });
+      }
+    },
     userLogin: function() {
       var user = Meteor.user();
 
@@ -359,6 +431,9 @@ if (Meteor.isServer) {
           last_login: user.login_time,
         }
       });
+
+      // Initialize the user profile on login.
+      Meteor.call('userProfileInit');
 
       // Fetch new tasks from users since last sync.
       Meteor.call('asanaTasksAllUsers');
