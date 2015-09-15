@@ -65,6 +65,33 @@ if (Meteor.isClient) {
     }
   });
 
+  Template.settingsWorkspaces.helpers({
+    workspaces: function() {
+      var user = Meteor.user();
+      var workspaces = AsanaWorkspaces.find({}).fetch();
+      if (user && user.profile) {
+        var userWorkspaces = user.profile.settings.workspaces;
+        _.each(workspaces, function (value, key) {
+          if (_.indexOf(userWorkspaces, value.id) > 0) {
+            workspaces[key].checked = true;
+          }
+        });
+      }
+      return workspaces;
+    }
+  });
+
+  Template.settingsMyWorkspaces.events({
+    'change .settings-workspaces': function(event) {
+      if (event.target.checked) {
+        Meteor.call('userProfileWorkspace', event.target.value, 'add');
+      }
+      else {
+        Meteor.call('userProfileWorkspace', event.target.value, 'remove');
+      }
+    }
+  });
+
   Accounts.ui.config({
     passwordSignupFields: "USERNAME_ONLY"
   });

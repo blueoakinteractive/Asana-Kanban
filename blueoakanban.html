@@ -10,10 +10,21 @@
     <h1>Asana Kanban</h1>
   </header>
   <div>
+    {{> settings}}
     {{> filters}}
     {{> dashboard}}
   </div>
 </body>
+
+<template name="settings">
+  {{> settingsWorkspaces}}
+</template>
+
+<template name="settingsWorkspaces">
+  {{#each workspaces}}
+    <input type="checkbox" checked="{{checked}}" class="settings-workspaces" value="{{id}}" />{{ name }}<br />
+  {{/each}}
+</template>
 
 <template name="dashboard">
   <ul>
