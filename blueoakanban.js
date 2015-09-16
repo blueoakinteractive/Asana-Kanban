@@ -28,6 +28,9 @@ if (Meteor.isClient) {
       if (workspace) {
         _.extend(query, {'workspace.id': workspace});
       }
+      else {
+        _.extend(query, {'workspace.id': {$in: Meteor.user().profile.settings.workspaces}});
+      }
 
       if (user) {
          _.extend(query, {'assignee.id': user});
@@ -43,7 +46,7 @@ if (Meteor.isClient) {
 
   Template.filters.helpers({
     workspaces: function() {
-      return AsanaWorkspaces.find({});
+      return myWorkspaces();
     },
     users: function() {
       return AsanaUsers.find({});
@@ -72,7 +75,10 @@ if (Meteor.isClient) {
       if (user && user.profile) {
         var userWorkspaces = user.profile.settings.workspaces;
         _.each(workspaces, function (value, key) {
-          if (_.indexOf(userWorkspaces, value.id) > 0) {
+          if (userWorkspaces.length > 1 && _.indexOf(userWorkspaces, value.id) > 0) {
+            workspaces[key].checked = true;
+          }
+          else if(userWorkspaces == value.id) {
             workspaces[key].checked = true;
           }
         });
@@ -81,7 +87,7 @@ if (Meteor.isClient) {
     }
   });
 
-  Template.settingsMyWorkspaces.events({
+  Template.settingsWorkspaces.events({
     'change .settings-workspaces': function(event) {
       if (event.target.checked) {
         Meteor.call('userProfileWorkspace', event.target.value, 'add');
@@ -474,6 +480,22 @@ Meteor.methods({
 
 });
 
+function myWorkspaces() {
+  var user = Meteor.user();
+  var userWorkspaces = user.profile.settings.workspaces;
+  return AsanaWorkspaces.find({
+    id: {
+      $in: userWorkspaces
+    }
+  });
+}
+
 Router.route('/', function() {
-  this.render('Dashboard', {});
+  this.render('Dashboard', function(){
+    Session.set('Workspace', null);
+  });
+});
+
+Router.route('/settings', function() {
+  this.render('Settings', {});
 });
