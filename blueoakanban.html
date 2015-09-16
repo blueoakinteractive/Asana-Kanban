@@ -6,13 +6,12 @@
   <header>
     <div class="login">
       {{> loginButtons}}
+      <a href="/settings">Settings</a>
     </div>
-    <h1>Asana Kanban</h1>
+    <h1><a href="/">Asana Kanban</a></h1>
   </header>
-  <div>
-    {{> settings}}
-    {{> filters}}
-    {{> dashboard}}
+  <div class="content">
+
   </div>
 </body>
 
@@ -27,6 +26,7 @@
 </template>
 
 <template name="dashboard">
+  {{> filters}}
   <ul>
     {{#each tasks}}
       {{> task}}
