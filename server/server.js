@@ -280,9 +280,22 @@ Meteor.methods({
             })
         }
     },
-    updateBoard: function (id, weight) {
+    updateBoardName: function(id, name) {
         if (Meteor.userId()) {
-            Boards.update(id, {
+            Boards.update({
+                _id : id
+            },{
+                $set: {
+                    name: name
+                }
+            });
+        }
+    },
+    updateBoardWeight: function (id, weight) {
+        if (Meteor.userId()) {
+            Boards.update({
+                _id : id
+            },{
                 $set: {
                     weight: weight
                 }

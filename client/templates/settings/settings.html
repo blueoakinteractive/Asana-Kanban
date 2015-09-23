@@ -14,17 +14,24 @@
 
 <template name="settingsBoards">
     <div class="row">
-        <h2>Boards</h2>
-        <form class="new-board">
-            <input type="text" class="new-board-name" name="board" />
-            <input type="submit" value="Add" />
-        </form>
-        <div class="boards">
-            <ul>
+        <div class="12-columns large">
+            <h2>Boards</h2>
+            <form class="new-board">
+                <input type="text" class="new-board-name" name="board" />
+                <input type="submit" value="Add" />
+            </form>
+            <div class="boards">
                 {{#each boards}}
-                <li>{{name}} <input type="text" class="board-weight" value="{{weight}}" /></li>
+                <div class="row">
+                    <div class="large-6 columns">
+                        <input type="text" class="board-name" value="{{name}}" />
+                    </div>
+                    <div class="large-6 columns">
+                        <input type="text" class="board-weight" value="{{weight}}" />
+                    </div>
+                </div>
                 {{/each}}
-            </ul>
+            </div>
         </div>
     </div>
 </template>

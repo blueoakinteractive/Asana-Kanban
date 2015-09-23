@@ -42,10 +42,13 @@ Template.settingsBoards.events({
         Meteor.call('addBoard', board);
         event.target.board.value = '';
     },
+    'change .boards .board-name': function (event) {
+        Meteor.call('updateBoardName', this._id, event.target.value)
+    },
     'change .boards .board-weight': function (event) {
         var weight = event.target.value;
         if (parseInt(weight) == weight) {
-            Meteor.call('updateBoard', this._id, weight)
+            Meteor.call('updateBoardWeight', this._id, weight)
         }
     }
 });
