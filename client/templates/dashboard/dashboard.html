@@ -1,0 +1,11 @@
+<template name="dashboard">
+    {{> filters}}
+    <div class="row dashboard">
+        {{#each boards}}
+            <div class="large-2 columns">
+                <strong>{{name}}</strong>
+                {{> board}}
+            </div>
+        {{/each}}
+    </div>
+</template>

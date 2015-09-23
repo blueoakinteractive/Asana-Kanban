@@ -1,0 +1,22 @@
+<template name="task">
+    <div class="large-12 columns" data-task-id="{{_id}}">
+        <div class="panel">
+            <div class="row">
+                <span class="secondary label handle">=</span>
+            </div>
+            <div class="row">
+                <div class="title">{{trimString name 0 100}}</div>
+            </div>
+            <div class="row">
+                <span class=" label assignee">{{assignee.name}}</span>
+                <span class="secondary label workspace">{{workspace.name}}</span>
+                <span class="secondary label"><a href="https://app.asana.com/0/{{workspace.id}}/{{id}}" target="_blank">link</a></span>
+                <span class="secondary label weight">{{weight}}</span>
+                <span class="secondary label id">{{id}}</span>
+            </div>
+            <div class="row">
+
+            </div>
+        </div>
+    </div>
+</template>

@@ -1,0 +1,9 @@
+<template name="board">
+    <div class="row board" id="{{_id}}" data-board-id="{{_id}}">
+        <div class="panel squash">
+        </div>
+        {{#each tasks}}
+            {{> task}}
+        {{/each}}
+    </div>
+</template>

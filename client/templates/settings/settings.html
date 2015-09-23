@@ -1,0 +1,30 @@
+<template name="settings">
+    {{> settingsWorkspaces}}
+    {{> settingsBoards}}
+</template>
+
+<template name="settingsWorkspaces">
+    <div class="row">
+        <h2>Tracked Workspaces</h2>
+        {{#each workspaces}}
+        <input type="checkbox" checked="{{checked}}" class="settings-workspaces" value="{{id}}" />{{ name }}<br />
+        {{/each}}
+    </div>
+</template>
+
+<template name="settingsBoards">
+    <div class="row">
+        <h2>Boards</h2>
+        <form class="new-board">
+            <input type="text" class="new-board-name" name="board" />
+            <input type="submit" value="Add" />
+        </form>
+        <div class="boards">
+            <ul>
+                {{#each boards}}
+                <li>{{name}} <input type="text" class="board-weight" value="{{weight}}" /></li>
+                {{/each}}
+            </ul>
+        </div>
+    </div>
+</template>
