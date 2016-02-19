@@ -1,21 +1,24 @@
 <template name="filters">
     <div class="row filters">
-        <select class="workspace-filter">
+        <label for="assignee-filter">Assignee</label>
+        <select name="assignee-filter" class="assignee-filter">
+            <option value="">All</option>
+            {{#each users}}
+             <option value="{{id}}">{{name}}</option>
+            {{/each}}
+        </select>
+        <label for="worspace-filter">Workspace</label>
+        <select name="workspace-filter" class="workspace-filter">
             <option value="">All</option>
             {{#each workspaces}}
             <option value="{{id}}">{{name}}</option>
             {{/each}}
         </select>
-        <select class="sort-filter">
+        <!-- <label for="sort-filter">Sort</label>
+        <select name="sort-filter" class="sort-filter">
             <option value="">Default</option>
             <option value="modified_at">Newly updated</option>
             <option value="created_at">Newly created</option>
-        </select>
-        <select class="assignee-filter">
-            <option value="">All</option>
-            {{#each users}}
-            <option value="{{id}}">{{name}}</option>
-            {{/each}}
-        </select>
+        </select> -->
     </div>
 </template>

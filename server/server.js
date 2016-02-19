@@ -99,7 +99,7 @@ Meteor.methods({
             });
 
             _.each(users.result, function (user) {
-                if (user.id) {
+                if (user.id && user.name && user.name != 'Private User') {
                     AsanaUsers.upsert({
                         id: user.id
                     }, {
@@ -124,6 +124,10 @@ Meteor.methods({
         }
         return;
     },
+    asanaMyTasks: function asanaMyTasks() {
+        var user = Meteor.user();
+        Meteor.call('asanaTasksByUser', user.profile.settings.asanaId);
+    },
     asanaTasksAllUsers: function asanaTasksAllUser() {
         var asanaClient = Meteor.asanaClient();
         var asana_users = AsanaUsers.find({});
@@ -140,11 +144,18 @@ Meteor.methods({
         // if no time filter is set.
         if (!modified_since) {
             if (asana_user.task_sync_time) {
-                modified_since = asana_user.task_sync_time.toISOString();
+                modified_since = asana_user.task_sync_time;
             }
             else {
-                modified_since = new Date('2015-09-09').toISOString();
+                modified_since = new Date('2015-09-09');
             }
+        }
+
+        var sync_limit = (new Date().getTime() - 5*60000);
+
+        if (sync_limit < modified_since.getTime()) {
+          console.log('Skipping sync since it happened less than 5 minutes ago');
+          return;
         }
 
         if (!asana_user.workspaces) {
@@ -159,7 +170,7 @@ Meteor.methods({
                 asanaClient.tasks.findAll({
                     workspace: workspace,
                     assignee: asana_user.id,
-                    modified_since: modified_since
+                    modified_since: modified_since.toISOString()
                 }, true).then(function (tasks) {
                     done(null, tasks.data);
                 });
@@ -173,10 +184,15 @@ Meteor.methods({
                         id: task.id,
                         workspace: workspace,
                         name: task.name,
-                        title: task.name
+                        title: task.name,
+                        assignee: {
+                            name: asana_user.name,
+                            id: asana_user.id
+                        }
                     });
 
-                    Meteor.call('asanaTaskDetail', task.id);
+                    // Task detail for each task takes forever!
+                    // Meteor.call('asanaTaskDetail', task.id);
                 }
             });
         })
@@ -304,6 +320,10 @@ Meteor.methods({
     },
     updateTaskBoard: function (taskId, destBoard, weight, sourceBoard) {
         var task = AsanaTasks.findOne({_id: taskId});
+
+        // Refresh the task from Asana.
+        Meteor.call('asanaTaskDetail', task.id);
+
         var board = Boards.findOne({_id: destBoard});
 
         if (!task) {
@@ -403,6 +423,7 @@ Meteor.methods({
             }
         }
     },
+
     // Method to update a users active workspaces.
     userProfileWorkspace: function (workspaceId, action) {
         var workspace = AsanaWorkspaces.findOne({id: parseInt(workspaceId)});
@@ -410,6 +431,9 @@ Meteor.methods({
         if (!workspace) {
             throw new Meteor.Error(400, 'Workspace does not exist');
         }
+
+        console.log(workspaceId);
+        console.log(action);
 
         // Add or remove the selected workspace for the users profile settings.
         if (action == 'remove') {
@@ -451,7 +475,9 @@ Meteor.methods({
         Meteor.call('userProfileInit');
 
         // Fetch new tasks from users since last sync.
-        // Meteor.call('asanaTasksAllUsers');
+        Meteor.call('asanaMyTasks');
+
+
         return;
     }
 });
