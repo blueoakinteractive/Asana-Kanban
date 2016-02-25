@@ -11,22 +11,28 @@ Accounts.onLogin(function () {
     Meteor.call('userLogin');
 });
 
-Template.registerHelper('activeUsers', function (workspaceId) {
-  if (workspaceId) {
-    return AsanaUsers.find({
-      workspaces: workspaceId
-    });
+Template.registerHelper('activeUsers', function (workspace_id) {
+  workspace_id = parseInt(workspace_id);
+  var user = Meteor.user();
+  var trackedUsers = user.profile.settings.trackedUsers;
+  var query = {
+    id: {
+        $in: trackedUsers
+    }
   }
-  else {
-    return AsanaUsers.find({});
+
+  if (workspace_id) {
+    _.extend(query, {'workspaces': workspace_id});
   }
+
+  return AsanaUsers.find(query);
 });
 
-Template.registerHelper('activeWorkspaces', function (userId) {
-
+Template.registerHelper('activeWorkspaces', function (user_id) {
+    user_id = parseInt(user_id);
     // If a user argument is passed, load the workspaces for that user.
-    if (userId) {
-        var user = AsanaUsers.findOne({id: userId});
+    if (user_id) {
+        var user = AsanaUsers.findOne({id: user_id});
         if (!user) return;
         var userWorkspaces = user.workspaces;
     }
