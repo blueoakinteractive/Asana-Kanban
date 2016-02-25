@@ -1,37 +1,29 @@
 Template.filters.helpers({
     workspaces: function() {
-        var userId = parseInt(Session.get('User'));
-        return UI._globalHelpers.activeWorkspaces(userId);
+        var user_id = Session.get('User');
+        return UI._globalHelpers.activeWorkspaces(user_id);
     },
     users: function() {
-        var workspaceId = parseInt(Session.get('Workspace'));
-        return UI._globalHelpers.activeUsers(workspaceId);
+        var workspace_id = Session.get('Workspace');
+        return UI._globalHelpers.activeUsers(workspace_id);
     },
 });
 
 Template.filters.events({
     'change .workspace-filter' : function(event) {
-        var workspaceId = parseInt(event.target.value);
-        Session.set('Workspace', workspaceId);
+        var user_id = Session.get('User');
+        var workspace_id = event.target.value;
+        Session.set('Workspace', workspace_id);
+        Meteor.call('asanaGetTasks', user_id, workspace_id, function() {});
     },
     'change .sort-filter' : function(event) {
-        var taskId = parseInt(event.target.value);
+        var taskId = event.target.value;
         Session.set('TaskSort', taskId);
     },
     'change .assignee-filter' : function(event) {
-        var userId = parseInt(event.target.value);
-        var workspaceId = parseInt(Session.get('Workspace'));
-        var loading = Session.get('loading') || [];
-
-        Meteor.call('asanaGetTasks', userId, workspaceId, function() {
-            loading.user = false;
-            Session.set('loading', loading)
-        });
-
-
-
-        loading.user = userId;
-        Session.set('loading', loading)
-        Session.set('User', userId);
+        var user_id = event.target.value;
+        var workspace_id = Session.get('Workspace');
+        Meteor.call('asanaGetTasks', user_id, workspace_id, function() {});
+        Session.set('User', user_id);
     }
 });
