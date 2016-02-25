@@ -205,10 +205,9 @@ Meteor.methods({
   asanaFetch: function () {
     this.unblock();
     var user = Meteor.user();
-    Controller.AsanaTasks.fetchAll(user.id);
-    Controller.AsanaProjects.fetchAll();
     Controller.AsanaUsers.fetchAll();
     Controller.AsanaWorkspaces.fetchAll();
+    Controller.AsanaProjects.fetchAll();
   }
 });
 
