@@ -282,6 +282,14 @@ var Controller = {
     },
   },
   AsanaTasks: {
+    fetchDetail: function(task_id) {
+      task = Asana.tasks.get(task_id);
+      if (task) {
+        AsanaTasks.upsert({
+          id: task.id,
+        }, task);
+      }
+    },
     fetchByWorkspace: function(user_id, workspace_id, last_sync) {
       var user = AsanaUsers.findOne({ id: user_id });
       console.log('Fetching workspace tasks ' + workspace_id);
@@ -301,6 +309,9 @@ var Controller = {
             id: user.id
           }
         });
+
+        // Update task detail.
+        Controller.AsanaTasks.fetchDetail(task.id);
 
         // If there's no weight for this task, put it at the end of the list.
         AsanaTasks.update({
