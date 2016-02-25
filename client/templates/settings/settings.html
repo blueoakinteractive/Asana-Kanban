@@ -1,5 +1,6 @@
 <template name="settings">
     {{> settingsWorkspaces}}
+    {{> settingsUsers}}
     {{> settingsBoards}}
 </template>
 
@@ -7,9 +8,18 @@
     <div class="row">
         <h2>Tracked Workspaces</h2>
         {{#each workspaces}}
-        <input type="checkbox" checked="{{checked}}" class="settings-workspaces" value="{{id}}" />{{ name }}<br />
+        <input type="checkbox" checked="{{checked}}" class="settings-workspaces" value="{{id}}" /> {{ name }}<br />
         {{/each}}
     </div>
+</template>
+
+<template name="settingsUsers">
+  <div class="row">
+    <h2>Tracked Users</h2>
+    {{#each users}}
+    <input type="checkbox" checked="{{checked}}" class="settings-users" value="{{id}}" /> {{ name }}<br />
+    {{/each}}
+  </div>
 </template>
 
 <template name="settingsBoards">

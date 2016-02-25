@@ -167,6 +167,34 @@ Meteor.methods({
       });
     }
   },
+  userProileTrackedUsers: function (user_id, action) {
+    this.unblock();
+    var user = AsanaUsers.findOne({id: parseInt(user_id)});
+
+    if (!user) {
+      throw new Meteor.Error(400, 'User does not exist');
+    }
+
+    // Add or remove the selected workspace for the users profile settings.
+    if (action == 'remove') {
+      Meteor.users.update({
+        _id: Meteor.userId()
+      }, {
+        $pull: {
+          'profile.settings.trackedUsers': parseInt(user_id)
+        }
+      });
+    }
+    else {
+      Meteor.users.update({
+        _id: Meteor.userId()
+      }, {
+        $addToSet: {
+          'profile.settings.trackedUsers': parseInt(user_id)
+        }
+      });
+    }
+  },
   userLogin: function () {
     this.unblock();
     var user = Meteor.user();
@@ -247,6 +275,17 @@ var Controller = {
           }, {
             $set: {
               'profile.settings.workspaces': []
+            }
+          })
+        }
+
+        // Init the users selected tracked users.
+        if (!user.profile.settings.trackedUsers) {
+          Meteor.users.update({
+            _id: Meteor.userId()
+          }, {
+            $set: {
+              'profile.settings.trackedUsers': []
             }
           })
         }

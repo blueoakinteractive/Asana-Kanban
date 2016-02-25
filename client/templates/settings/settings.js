@@ -28,6 +28,28 @@ Template.settingsWorkspaces.helpers({
     }
 });
 
+Template.settingsUsers.helpers({
+  users: function() {
+    var user = Meteor.user();
+    if (!user) return;
+    var asanaUser = AsanaUsers.findOne({id: user.profile.settings.asanaId});
+    if (!asanaUser) return;
+    var users = AsanaUsers.find({}).fetch();
+    var trackedUsers = user.profile.settings.trackedUsers;
+
+    _.each(users, function(value, key) {
+      if (trackedUsers.length > 1 && _.indexOf(trackedUsers, parseInt(value.id)) >= 0) {
+        users[key].checked = true;
+      }
+      else if (trackedUsers == value.id) {
+        users[key].checked = true;
+      }
+    });
+
+    return users;
+  }
+});
+
 Template.settingsWorkspaces.events({
     'change .settings-workspaces': function (event) {
         if (event.target.checked) {
@@ -35,6 +57,17 @@ Template.settingsWorkspaces.events({
         }
         else {
             Meteor.call('userProfileWorkspace', event.target.value, 'remove');
+        }
+    }
+});
+
+Template.settingsUsers.events({
+    'change .settings-users': function (event) {
+        if (event.target.checked) {
+            Meteor.call('userProileTrackedUsers', event.target.value, 'add');
+        }
+        else {
+            Meteor.call('userProileTrackedUsers', event.target.value, 'remove');
         }
     }
 });
