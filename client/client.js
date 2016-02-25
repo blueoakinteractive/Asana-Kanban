@@ -4,11 +4,11 @@ Meteor.subscribe('asana_users');
 Meteor.subscribe('boards');
 
 Accounts.ui.config({
-    passwordSignupFields: "USERNAME_ONLY"
+  passwordSignupFields: "USERNAME_ONLY"
 });
 
 Accounts.onLogin(function () {
-    Meteor.call('userLogin');
+  Meteor.call('userLogin');
 });
 
 Template.registerHelper('activeUsers', function (workspace_id) {
@@ -17,7 +17,7 @@ Template.registerHelper('activeUsers', function (workspace_id) {
   var trackedUsers = user.profile.settings.trackedUsers;
   var query = {
     id: {
-        $in: trackedUsers
+      $in: trackedUsers
     }
   }
 
@@ -29,70 +29,70 @@ Template.registerHelper('activeUsers', function (workspace_id) {
 });
 
 Template.registerHelper('activeWorkspaces', function (user_id) {
-    user_id = parseInt(user_id);
-    // If a user argument is passed, load the workspaces for that user.
-    if (user_id) {
-        var user = AsanaUsers.findOne({id: user_id});
-        if (!user) return;
-        var userWorkspaces = user.workspaces;
-    }
-    // Otherwise, load the workspaces for the logged in user.
-    else {
-        var user = Meteor.user();
-        if (!user || !user.profile) return;
-        var userWorkspaces = user.profile.settings.workspaces;
-    }
+  user_id = parseInt(user_id);
+  // If a user argument is passed, load the workspaces for that user.
+  if (user_id) {
+    var user = AsanaUsers.findOne({id: user_id});
+    if (!user) return;
+    var userWorkspaces = user.workspaces;
+  }
+  // Otherwise, load the workspaces for the logged in user.
+  else {
+    var user = Meteor.user();
+    if (!user || !user.profile) return;
+    var userWorkspaces = user.profile.settings.workspaces;
+  }
 
-    // Query for the selected users workspaces.
-    if (userWorkspaces) {
-        return AsanaWorkspaces.find({
-            id: {
-                $in: userWorkspaces
-            }
-        });
-    }
+  // Query for the selected users workspaces.
+  if (userWorkspaces) {
+    return AsanaWorkspaces.find({
+      id: {
+        $in: userWorkspaces
+      }
+    });
+  }
 
-    return [];
+  return [];
 });
 
 Template.registerHelper('loadTasks', function (boardId) {
-    var result = [];
-    var workspace = parseInt(Session.get('Workspace'));
-    var user = parseInt(Session.get('User'));
+  var result = [];
+  var workspace = parseInt(Session.get('Workspace'));
+  var user = parseInt(Session.get('User'));
 
-    var filter = {sort: {weight: 1}};
-    if (Session.get('TaskSort')) {
-        filter.sort[Session.get('TaskSort')] = Session.get('TaskSort');
-    }
+  var filter = {sort: {weight: 1}};
+  if (Session.get('TaskSort')) {
+    filter.sort[Session.get('TaskSort')] = Session.get('TaskSort');
+  }
 
-    var query = {completed: {$ne: true}};
+  var query = {completed: {$ne: true}};
 
-    if (workspace) {
-        _.extend(query, {'workspace.id': workspace});
+  if (workspace) {
+    _.extend(query, {'workspace.id': workspace});
+  }
+  else {
+    _.extend(query, {'workspace.id': {$in: Meteor.user().profile.settings.workspaces}});
+  }
+
+  if (user) {
+    _.extend(query, {'assignee.id': user});
+  }
+
+  if (boardId) {
+    var board = Boards.findOne({_id: boardId});
+    if (board.asanaTasks) {
+      _.extend(query, {id: {$in: board.asanaTasks}});
     }
     else {
-        _.extend(query, {'workspace.id': {$in: Meteor.user().profile.settings.workspaces}});
+      return;
     }
+  }
 
-    if (user) {
-        _.extend(query, {'assignee.id': user});
-    }
-
-    if (boardId) {
-        var board = Boards.findOne({_id: boardId});
-        if (board.asanaTasks) {
-            _.extend(query, {id: {$in: board.asanaTasks}});
-        }
-        else {
-          return;
-        }
-    }
-
-    return AsanaTasks.find(query, filter);
-    // return AsanaTasks.find(query);
+  return AsanaTasks.find(query, filter);
+  // return AsanaTasks.find(query);
 });
 
 Handlebars.registerHelper('trimString', function(passedString, startstring, endstring) {
-    var theString = passedString.substring( startstring, endstring );
-    return new Handlebars.SafeString(theString)
+  var theString = passedString.substring( startstring, endstring );
+  return new Handlebars.SafeString(theString)
 });
