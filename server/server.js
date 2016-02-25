@@ -201,6 +201,14 @@ Meteor.methods({
     Controller.Meteor.User.login(user);
     Controller.Meteor.User.init(user);
     return;
+  },
+  asanaFetch: function () {
+    this.unblock();
+    var user = Meteor.user();
+    Controller.AsanaTasks.fetchAll(user.id);
+    Controller.AsanaProjects.fetchAll();
+    Controller.AsanaUsers.fetchAll();
+    Controller.AsanaWorkspaces.fetchAll();
   }
 });
 
