@@ -1,10 +1,10 @@
 Template.filters.helpers({
     workspaces: function() {
-        var userId = Session.get('User');
+        var userId = parseInt(Session.get('User'));
         return UI._globalHelpers.activeWorkspaces(userId);
     },
     users: function() {
-        var workspaceId = Session.get('Workspace');
+        var workspaceId = parseInt(Session.get('Workspace'));
         return UI._globalHelpers.activeUsers(workspaceId);
     },
 });

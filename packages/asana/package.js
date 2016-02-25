@@ -30,6 +30,11 @@ Package.onUse(function(api) {
     'client');
 
   api.addFiles('asana.js', 'server');
+  api.addFiles('tasks.js', 'server');
+  api.addFiles('users.js', 'server');
+  api.addFiles('workspaces.js', 'server');
+  api.addFiles('projects.js', 'server');
+  api.addFiles('tags.js', 'server');
 
   api.addFiles('common.js', ['client', 'server']);
   api.addFiles('server.js', 'server');

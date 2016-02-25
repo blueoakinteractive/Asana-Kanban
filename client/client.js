@@ -27,6 +27,7 @@ Template.registerHelper('activeWorkspaces', function (userId) {
     // If a user argument is passed, load the workspaces for that user.
     if (userId) {
         var user = AsanaUsers.findOne({id: userId});
+        if (!user) return;
         var userWorkspaces = user.workspaces;
     }
     // Otherwise, load the workspaces for the logged in user.
@@ -57,7 +58,7 @@ Template.registerHelper('loadTasks', function (boardId) {
         filter.sort[Session.get('TaskSort')] = Session.get('TaskSort');
     }
 
-    var query = {completed: false};
+    var query = {};
 
     if (workspace) {
         _.extend(query, {'workspace.id': workspace});
@@ -79,7 +80,7 @@ Template.registerHelper('loadTasks', function (boardId) {
     }
 
     return AsanaTasks.find(query, filter);
-    //return AsanaTasks.find(query);
+    // return AsanaTasks.find(query);
 });
 
 Handlebars.registerHelper('trimString', function(passedString, startstring, endstring) {
