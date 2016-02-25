@@ -31,6 +31,15 @@ Meteor.publish('boards', function () {
 });
 
 Meteor.methods({
+  asanaGetTasks: function(user_id, workspace_id) {
+    this.unblock();
+    if (!workspace_id) {
+      Controller.AsanaTasks.fetchAll(user_id);
+    }
+    else {
+      Controller.AsanaTasks.fetchByWorkspace(user_id, workspace_id);
+    }
+  },
 
   addBoard: function (board) {
     if (Meteor.userId()) {
@@ -84,20 +93,22 @@ Meteor.methods({
 
     // Increment tasks in the same board with an equal
     // or greater weight by 1.
-    AsanaTasks.update({
-      id: {
-        $in : board.asanaTasks
-      },
-      weight: {
-        $gte: parseInt(weight)
-      }
-      }, {
-        $inc: {
-          weight: 1
+    if (board.asanaTasks) {
+      AsanaTasks.update({
+        id: {
+          $in : board.asanaTasks
+        },
+        weight: {
+          $gte: parseInt(weight)
         }
-      },
-      {multi: true}
-    );
+        }, {
+          $inc: {
+            weight: 1
+          }
+        },
+        {multi: true}
+      );
+    }
 
     // Set the weight of this asana task.
     AsanaTasks.update({
@@ -108,10 +119,12 @@ Meteor.methods({
       }
     });
 
+    console.log(taskId, destBoard, weight, sourceBoard);
+    console.log(task.id);
     // Remove the task from the old board.
     if (sourceBoard) {
       Boards.update({
-        _id :sourceBoard
+        _id: sourceBoard
       },{
         $pull: {
           asanaTasks: task.id
@@ -158,7 +171,6 @@ Meteor.methods({
     var user = Meteor.user();
     Controller.Meteor.User.login(user);
     Controller.Meteor.User.init(user);
-    Controller.AsanaTasks.fetchAll(user.profile.settings.asanaId);
     return;
   }
 });
@@ -166,7 +178,7 @@ Meteor.methods({
 /**
  * @todo: SYNC METHODS
  */
- // Controller.AsanaTasks.fetchAll(user.profile.settings.asanaId);
+ // Controller.AsanaTasks.fetchAll(user.id);
  // Controller.AsanaProjects.fetchAll();
  // Controller.AsanaUsers.fetchAll();
  // Controller.AsanaWorkspaces.fetchAll();
@@ -270,8 +282,10 @@ var Controller = {
     },
   },
   AsanaTasks: {
-    fetchByWorkspace: function(user, workspace, last_sync) {
-      var tasks = Asana.tasks.query(user.id, workspace, last_sync);
+    fetchByWorkspace: function(user_id, workspace_id, last_sync) {
+      var user = AsanaUsers.findOne({ id: user_id });
+      console.log('Fetching workspace tasks ' + workspace_id);
+      var tasks = Asana.tasks.query(user.id, workspace_id, last_sync);
 
       // Loop through the results and upsert the Mongo collection.
       _.each(tasks, function(task) {
@@ -287,7 +301,31 @@ var Controller = {
             id: user.id
           }
         });
+
+        // If there's no weight for this task, put it at the end of the list.
+        AsanaTasks.update({
+          id: task.id,
+          weight: null
+        }, {
+          $inc: {
+            weight: 1
+          }
+        });
+
+        // If there's no board for this task, assign it to the default.
+        var board = Boards.findOne({ asanaTasks: { $in: [task.id]} });
+
+        if (!board) {
+          Boards.update({
+            _id : "aWb7rLknYmxm3S4kj"
+          },{
+            $addToSet: {
+              asanaTasks: task.id
+            }
+          });
+        }
       });
+      console.log('Done fetching workspace tasks ' + workspace_id);
     },
     fetchAll: function(user_id) {
       var user = AsanaUsers.findOne({ id: user_id });
@@ -304,7 +342,7 @@ var Controller = {
       }
 
       _.each(user.workspaces, function(workspace) {
-        Controller.AsanaTasks.fetchByWorkspace(user, workspace, last_sync);
+        Controller.AsanaTasks.fetchByWorkspace(user.id, workspace, last_sync);
       });
 
       // Store the sync time on the user object.
@@ -315,6 +353,8 @@ var Controller = {
           task_sync_time: sync_time
         }
       });
+
+      console.log('Done fetching tasks for ' + user.name);
     },
   },
   AsanaUsers: {

@@ -33,6 +33,7 @@ Template.registerHelper('activeWorkspaces', function (userId) {
     // Otherwise, load the workspaces for the logged in user.
     else {
         var user = Meteor.user();
+        if (!user || !user.profile) return;
         var userWorkspaces = user.profile.settings.workspaces;
     }
 
@@ -73,9 +74,11 @@ Template.registerHelper('loadTasks', function (boardId) {
 
     if (boardId) {
         var board = Boards.findOne({_id: boardId});
-        if (board && board.name != 'Unassigned') {
-            if (!board.asanaTasks) board.asanaTasks = [99];
+        if (board.asanaTasks) {
             _.extend(query, {id: {$in: board.asanaTasks}});
+        }
+        else {
+          return;
         }
     }
 

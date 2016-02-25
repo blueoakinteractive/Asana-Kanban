@@ -20,11 +20,16 @@ Template.filters.events({
     },
     'change .assignee-filter' : function(event) {
         var userId = parseInt(event.target.value);
+        var workspaceId = parseInt(Session.get('Workspace'));
         var loading = Session.get('loading') || [];
-        Meteor.call('asanaTasksByUser', userId, function() {
+
+        Meteor.call('asanaGetTasks', userId, workspaceId, function() {
             loading.user = false;
             Session.set('loading', loading)
         });
+
+
+
         loading.user = userId;
         Session.set('loading', loading)
         Session.set('User', userId);
