@@ -29,21 +29,15 @@ Asana.tasks = {
       asanaClient.tasks.findAll({
         workspace: workspace_id,
         assignee: user_id,
-        modified_since: modified_since.toISOString()
+        modified_since: modified_since.toISOString(),
+        opt_fields: 'workspace,completed,modified_at,name,projects'
       }, true).then(function (tasks) {
         done(null, tasks.data);
       });
     });
 
-
     _.each(tasks.result, function (task) {
       if (task.id && task.name) {
-
-        // Add the workspace id to the task.
-        if (!task.workspace) {
-          task.workspace = {id: workspace_id};
-        }
-
         // Append the result to the return object.
         results.push(task);
       }
