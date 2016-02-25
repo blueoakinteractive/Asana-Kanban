@@ -36,8 +36,11 @@ Meteor.methods({
     if (!workspace_id) {
       Controller.AsanaTasks.fetchAll(user_id);
     }
+    else if (user_id) {
+      Controller.AsanaTasks.fetchByUserWorkspace(user_id, workspace_id);
+    }
     else {
-      Controller.AsanaTasks.fetchByWorkspace(user_id, workspace_id);
+      Controller.AsanaTasks.fetchByWorkspace(workspace_id);
     }
   },
 
@@ -137,14 +140,12 @@ Meteor.methods({
 
   // Method to update a users active workspaces.
   userProfileWorkspace: function (workspaceId, action) {
+    this.unblock();
     var workspace = AsanaWorkspaces.findOne({id: parseInt(workspaceId)});
 
     if (!workspace) {
       throw new Meteor.Error(400, 'Workspace does not exist');
     }
-
-    console.log(workspaceId);
-    console.log(action);
 
     // Add or remove the selected workspace for the users profile settings.
     if (action == 'remove') {
@@ -182,6 +183,17 @@ Meteor.methods({
  // Controller.AsanaProjects.fetchAll();
  // Controller.AsanaUsers.fetchAll();
  // Controller.AsanaWorkspaces.fetchAll();
+
+var Utility = {
+  syncTimer : function(date) {
+    var sync_limit = (new Date().getTime() - 5*60000);
+    if (sync_limit < date.getTime()) {
+      console.log('Skipping sync since it happened less than 5 minutes ago');
+      return false;
+    }
+    return true;
+  }
+}
 
 var Controller = {
   Meteor : {
@@ -290,9 +302,40 @@ var Controller = {
         }, task);
       }
     },
-    fetchByWorkspace: function(user_id, workspace_id, last_sync) {
+    fetchByWorkspace: function(workspace_id) {
+      var sync_time = new Date();
+      workspace_id = parseInt(workspace_id);
+      var workspace = AsanaWorkspaces.findOne({id: workspace_id});
+      var users = AsanaUsers.find({workspaces: workspace_id}).fetch();
+      var last_sync = workspace.task_sync_time || new Date('2016-02-01');
+
+      // Make sure we haven't synced this workspace recently.
+      if (!Utility.syncTimer(last_sync)) { return }
+
+      _.each(users, function(user) {
+        Controller.AsanaTasks.fetchByUserWorkspace(user.id, workspace_id, last_sync);
+      });
+
+      // Store the sync time on the workspace object.
+      AsanaWorkspaces.update({
+        id: workspace_id
+        }, {
+        $set: {
+          task_sync_time: sync_time
+        }
+      });
+    },
+    fetchByUserWorkspace: function(user_id, workspace_id, last_sync) {
+      user_id = parseInt(user_id);
+      workspace_id = parseInt(workspace_id);
       var user = AsanaUsers.findOne({ id: user_id });
-      console.log('Fetching workspace tasks ' + workspace_id);
+      var workspace = AsanaWorkspaces.findOne({ id: workspace_id });
+
+      // No sense in syncing for this workspace+user if the entire workspace
+      // has been synced recently.
+      var workspace_sync = workspace.task_sync_time || new Date('2016-02-01');
+      if (!Utility.syncTimer(workspace_sync)) { return }
+
       var tasks = Asana.tasks.query(user.id, workspace_id, last_sync);
 
       // Loop through the results and upsert the Mongo collection.
@@ -336,24 +379,19 @@ var Controller = {
           });
         }
       });
-      console.log('Done fetching workspace tasks ' + workspace_id);
     },
     fetchAll: function(user_id) {
+      user_id = parseInt(user_id);
       var user = AsanaUsers.findOne({ id: user_id });
+      if (!user) return;
       var sync_time = new Date();
-
-      console.log('Fetching tasks for ' + user.name);
-
       var last_sync = user.task_sync_time || new Date('2016-02-01');
-      var sync_limit = (new Date().getTime() - 5*60000);
 
-      if (sync_limit < last_sync.getTime()) {
-        console.log('Skipping sync since it happened less than 5 minutes ago');
-        return;
-      }
+      // Make sure we haven't synced this tasks recently.
+      if (!Utility.syncTimer(last_sync)) { return }
 
       _.each(user.workspaces, function(workspace) {
-        Controller.AsanaTasks.fetchByWorkspace(user.id, workspace, last_sync);
+        Controller.AsanaTasks.fetchByUserWorkspace(user.id, workspace, last_sync);
       });
 
       // Store the sync time on the user object.
@@ -364,8 +402,6 @@ var Controller = {
           task_sync_time: sync_time
         }
       });
-
-      console.log('Done fetching tasks for ' + user.name);
     },
   },
   AsanaUsers: {
