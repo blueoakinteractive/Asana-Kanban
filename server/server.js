@@ -213,6 +213,7 @@ Meteor.methods({
     Controller.AsanaUsers.fetchAll();
     Controller.AsanaWorkspaces.fetchAll();
     Controller.AsanaProjects.fetchAll();
+    Controller.AsanaTags.fetchAll();
   }
 });
 
@@ -223,6 +224,7 @@ Meteor.methods({
  // Controller.AsanaProjects.fetchAll();
  // Controller.AsanaUsers.fetchAll();
  // Controller.AsanaWorkspaces.fetchAll();
+ // Controller.AsanaTags.fetchAll();
 
 var Utility = {
   syncTimer : function(date) {
