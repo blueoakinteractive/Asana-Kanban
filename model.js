@@ -4,9 +4,3 @@ AsanaTasks = new Mongo.Collection("asana_tasks");
 AsanaTags = new Mongo.Collection("asana_tags");
 AsanaProjects = new Mongo.Collection("asana_projects");
 Boards = new Mongo.Collection("boards");
-
-Boards.upsert({
-  _id: 'aWb7rLknYmxm3S4kj',
-  }, {
-  name: 'In Queue',
-});

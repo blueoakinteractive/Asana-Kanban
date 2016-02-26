@@ -14,6 +14,7 @@ Accounts.onLogin(function () {
 Template.registerHelper('activeUsers', function (workspace_id) {
   workspace_id = parseInt(workspace_id);
   var user = Meteor.user();
+  if (!user) return;
   var trackedUsers = user.profile.settings.trackedUsers;
   var query = {
     id: {
@@ -48,7 +49,8 @@ Template.registerHelper('activeWorkspaces', function () {
 Template.registerHelper('loadTasks', function (boardId) {
   var result = [];
   var workspace = parseInt(Session.get('Workspace'));
-  var user = parseInt(Session.get('User'));
+  var user_id = parseInt(Session.get('User'));
+  var user = Meteor.user();
 
   var filter = {sort: {weight: 1}};
   if (Session.get('TaskSort')) {
@@ -60,12 +62,12 @@ Template.registerHelper('loadTasks', function (boardId) {
   if (workspace) {
     _.extend(query, {'workspace.id': workspace});
   }
-  else {
-    _.extend(query, {'workspace.id': {$in: Meteor.user().profile.settings.workspaces}});
+  else if (user) {
+    _.extend(query, {'workspace.id': {$in: user.profile.settings.workspaces}});
   }
 
-  if (user) {
-    _.extend(query, {'assignee.id': user});
+  if (user_id) {
+    _.extend(query, {'assignee.id': user_id});
   }
 
   if (boardId) {
@@ -79,7 +81,6 @@ Template.registerHelper('loadTasks', function (boardId) {
   }
 
   return AsanaTasks.find(query, filter);
-  // return AsanaTasks.find(query);
 });
 
 Handlebars.registerHelper('trimString', function(passedString, startstring, endstring) {

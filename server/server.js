@@ -1,5 +1,12 @@
 Meteor.startup(function () {
   // code to run on server at startup
+  Boards.upsert({
+    _id: 'aWb7rLknYmxm3S4kj'
+    }, {
+    $set : {
+      name: 'In Queue'
+    }
+  });
 });
 
 Meteor.publish('asana_tasks', function () {
@@ -122,8 +129,6 @@ Meteor.methods({
       }
     });
 
-    console.log(taskId, destBoard, weight, sourceBoard);
-    console.log(task.id);
     // Remove the task from the old board.
     if (sourceBoard) {
       Boards.update({
@@ -305,10 +310,12 @@ var Controller = {
       _.each(projects, function(project) {
           AsanaProjects.upsert({
             id: project.id
-          }, {
-            id: project.id,
-            name: project.name,
-            workspace: workspace_id
+            }, {
+            $set: {
+              id: project.id,
+              name: project.name,
+              workspace: workspace_id
+            }
           });
       });
     },
@@ -325,10 +332,12 @@ var Controller = {
       _.each(tags, function(tag) {
         AsanaTags.upsert({
           id: tag.id
-        }, {
-          id: tag.id,
-          name: tag.name,
-          workspace: workspace_id
+          }, {
+          $set: {
+            id: tag.id,
+            name: tag.name,
+            workspace: workspace_id
+          }
         });
       });
     },
@@ -345,7 +354,9 @@ var Controller = {
       if (task) {
         AsanaTasks.upsert({
           id: task.id,
-        }, task);
+          }, {
+          $set: task
+        });
       }
     },
     fetchByWorkspace: function(workspace_id) {
@@ -388,14 +399,16 @@ var Controller = {
       _.each(tasks, function(task) {
         AsanaTasks.upsert({
           id: task.id,
-        }, {
-          id: task.id,
-          workspace: task.workspace,
-          name: task.name,
-          title: task.name,
-          assignee: {
-            name: user.name,
-            id: user.id
+          }, {
+          $set: {
+            id: task.id,
+            workspace: task.workspace,
+            name: task.name,
+            title: task.name,
+            assignee: {
+              name: user.name,
+              id: user.id
+            }
           }
         });
 
@@ -456,7 +469,7 @@ var Controller = {
       _.each(users, function(user) {
         AsanaUsers.upsert({
           id: user.id
-        }, {
+          }, {
           $set: {
             id: user.id,
             name: user.name
@@ -465,7 +478,6 @@ var Controller = {
             workspaces: workspace_id
           }
         });
-        console.log(user);
       });
     },
     fetchAll: function() {
