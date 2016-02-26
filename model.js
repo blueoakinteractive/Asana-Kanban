@@ -8,5 +8,5 @@ Boards = new Mongo.Collection("boards");
 Boards.upsert({
   _id: 'aWb7rLknYmxm3S4kj',
   }, {
-  name: 'Unassigned',
+  name: 'In Queue',
 });
