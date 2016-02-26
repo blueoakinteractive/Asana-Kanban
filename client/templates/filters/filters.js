@@ -1,7 +1,7 @@
 Template.filters.helpers({
     workspaces: function() {
         var user_id = Session.get('User');
-        return UI._globalHelpers.activeWorkspaces(user_id);
+        return UI._globalHelpers.activeWorkspaces();
     },
     users: function() {
         var workspace_id = Session.get('Workspace');

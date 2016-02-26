@@ -28,20 +28,10 @@ Template.registerHelper('activeUsers', function (workspace_id) {
   return AsanaUsers.find(query);
 });
 
-Template.registerHelper('activeWorkspaces', function (user_id) {
-  user_id = parseInt(user_id);
-  // If a user argument is passed, load the workspaces for that user.
-  if (user_id) {
-    var user = AsanaUsers.findOne({id: user_id});
-    if (!user) return;
-    var userWorkspaces = user.workspaces;
-  }
-  // Otherwise, load the workspaces for the logged in user.
-  else {
-    var user = Meteor.user();
-    if (!user || !user.profile) return;
-    var userWorkspaces = user.profile.settings.workspaces;
-  }
+Template.registerHelper('activeWorkspaces', function () {
+  var user = Meteor.user();
+  if (!user || !user.profile) return;
+  var userWorkspaces = user.profile.settings.workspaces;
 
   // Query for the selected users workspaces.
   if (userWorkspaces) {
