@@ -55,7 +55,7 @@ Template.registerHelper('loadTasks', function (boardId) {
     filter.sort[Session.get('TaskSort')] = Session.get('TaskSort');
   }
 
-  var query = {completed: {$ne: true}};
+  var query = {completed: false};
 
   if (workspace) {
     _.extend(query, {'workspace.id': workspace});
