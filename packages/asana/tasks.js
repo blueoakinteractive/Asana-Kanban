@@ -4,13 +4,20 @@ Asana.tasks = {
     var asanaClient = Asana.asanaClient();
 
     var task = Async.runSync(function (done) {
-      asanaClient.tasks.findById(task_id).then(function (task) {
+      asanaClient.tasks.findById(task_id)
+      .then(function (task) {
         done(null, task);
+      })
+      .catch(function(ex){
+        done(null, ex);
       });
     });
 
     if (task.result && task.result.id) {
-      result = task.result
+      result = task.result;
+    }
+    else if (task.result && task.result.status && task.result.status == 404) {
+      return 'deleted';
     }
 
     return result;

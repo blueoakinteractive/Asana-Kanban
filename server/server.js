@@ -51,6 +51,11 @@ Meteor.methods({
     }
   },
 
+  asanaRefreshTask: function(task_id) {
+    this.unblock();
+    Controller.AsanaTasks.fetchDetail(task_id);
+  },
+
   addBoard: function (board) {
     if (Meteor.userId()) {
       Boards.insert({
@@ -353,12 +358,20 @@ var Controller = {
   AsanaTasks: {
     fetchDetail: function(task_id) {
       task = Asana.tasks.get(task_id);
+
       if (task) {
-        AsanaTasks.upsert({
-          id: task.id,
-          }, {
-          $set: task
-        });
+        // Handle task deletion.
+        if (task == 'deleted') {
+          AsanaTasks.remove({ id: parseInt(task_id) });
+        }
+        // Upsert task updates.
+        else {
+          AsanaTasks.upsert({
+            id: task.id,
+            }, {
+            $set: task
+          });
+        }
       }
     },
     fetchByWorkspace: function(workspace_id) {
