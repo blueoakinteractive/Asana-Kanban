@@ -72,7 +72,7 @@ Template.registerHelper('loadTasks', function (boardId) {
 
   if (boardId) {
     var board = Boards.findOne({_id: boardId});
-    if (board.asanaTasks) {
+    if (board && board.asanaTasks) {
       _.extend(query, {id: {$in: board.asanaTasks}});
     }
     else {
